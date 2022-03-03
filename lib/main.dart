@@ -1,13 +1,24 @@
+import 'package:jfp_audio_tour/components/blinkingbutton.dart';
+import 'package:jfp_audio_tour/socketProvider.dart';
+import 'package:provider/provider.dart';
 import 'package:wakelock/wakelock.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 
+import 'components/screens/startScreen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   Wakelock.enable();
 
-  runApp(const JFAudioTour());
+  runApp(
+      MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (_) => SocketProvider()),
+          ],
+      child: const JFAudioTour()
+      )
+  );
 }
 
 class JFAudioTour extends StatelessWidget {
@@ -16,158 +27,102 @@ class JFAudioTour extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const title = 'WebSocket Demo';
-    return const MaterialApp(
+    return MaterialApp(
+      theme: ThemeData(
+        primarySwatch: Colors.red,
+      ),
       title: title,
-      home: MyHomePage(
+      home: const FirstRoute(
         title: title,
       ),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({
-    Key? key,
-    required this.title,
-  }) : super(key: key);
-
-  final String title;
+class FirstRoute extends StatefulWidget {
+  const FirstRoute({Key? key, required String title}) : super(key: key);
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  State<FirstRoute> createState() => _FirstRouteState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  final TextEditingController _controller = TextEditingController();
-
-  String ip = '192.168.0.111';
-  String port = '4545';
-  late Socket socket;
-
-    @override
-  void dispose() {
-      socket.write('exit');
-      socket.flush();
-      socket.close();
-      getDataFromServer(ip, port);
-      _controller.dispose();
-    super.dispose();
-  }
+class _FirstRouteState extends State<FirstRoute> {
+  String title = 'WebSocket Demo';
+  late SocketProvider socketProvider;
+  bool isSocketConnected = false;
 
   @override void initState() {
-    // TODO: implement initState
+    socketProvider = Provider.of<SocketProvider>(context, listen: false);
+    socketProvider.connectAndListen();
     super.initState();
-    getDataFromServer(ip, port);
   }
-
-  void getDataFromServer(String ip, String port) async{
-    await Socket.connect(ip, int.parse(port)).then((sock) async {
-      socket = sock;
-      print('Connected to: '
-          '${sock.remoteAddress.address}:${sock.remotePort}');
-      sock.listen((event) {
-        String result = String.fromCharCodes(event);
-        print(result);
-        setState(() {
-          // List data = [ ];
-          // data = event;
-          // if (data.isEmpty) data.add(0);
-        });
-      });
-      sock.write("open");
-    }).onError((error, stackTrace){
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text("Error! $error"),
-      ));
-    });
-  }
-
-
 
   @override
   Widget build(BuildContext context) {
+    isSocketConnected = Provider.of<SocketProvider>(context, listen: true).isSocketConnected;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: const Text('First Route'),
       ),
-      body: Container(
+      body: Center(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Expanded(
-              child: ElevatedButton(
-                style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.all<Color>(Colors.green)
-                ),
-                  onPressed: () {
-                    socket.write('play');
-                  },
-                  child: Text('Play')
-              ),
-            ),
-            Expanded(
-              child: ElevatedButton(
-                  style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all<Color>(Colors.yellow)
-                  ),
-                  onPressed: () {
-                    socket.write('pause');
-                  },
-                  child: Text('Pause')
-              ),
-            ),
-            Expanded(
-              child: ElevatedButton(
-                  style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all<Color>(Colors.orange)
-                  ),
-                  onPressed: () {
-                    socket.write('stop');
-                  },
-                  child: Text('Stop')
-              ),
-            ),
-            Expanded(
-              child: ElevatedButton(
-                  style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all<Color>(Colors.blue)
-                  ),
-                  onPressed: () {
-                    socket.write('reaper hello');
-                  },
-                  child: Text('Check 3')
-              ),
-            ),
-            Expanded(
-              child: ElevatedButton(
-                  style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all<Color>(Colors.purple)
-                  ),
-                  onPressed: () {
-                    socket.write('mainOnCommand');
-                  },
-                  child: Text('Cursor Position')
-              ),
+            ElevatedButton(
+              child: const Text('Start'),
+              onPressed: () {
+                // startIfConnected(context);
+                start(context);
+              },
             ),
             ElevatedButton(
-                style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.all<Color>(Colors.red)
-                ),
-                onPressed: () {
-                  socket.write('exit');
-                },
-                child: Text('Exit')
+              child: const Text('Connect'),
+              onPressed: () {
+                var snackBar = const SnackBar(content: Text(
+                    'Attempting connection.'),
+                );
+                ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                socketProvider.connectAndListen();
+              },
             ),
           ],
         ),
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: _sendMessage,
-      //   tooltip: 'Send message',
-      //   child: const Icon(Icons.send),
-      // ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 
+  void startIfConnected(context) {
+    if(isSocketConnected) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => StartScreen(
+            title: title,
+          ),
+        ),
+      );
+    } else {
+      var snackBar = const SnackBar(content: Text(
+          'Socket not connected. Please ensure that\n'
+              'correct IP is used, Reaper is open,\n'
+              'and Python script is running.'),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      socketProvider.connectAndListen();
+    }
   }
+
+  void start(context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => StartScreen(
+          title: title,
+        ),
+      ),
+    );
+  }
+
+}
 
