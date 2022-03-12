@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:jfp_audio_tour/components/screens/scenePlayingScreen.dart';
 
 class LanguageSelectionScreen extends StatefulWidget {
   const LanguageSelectionScreen({Key? key}) : super(key: key);
@@ -26,15 +27,20 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
           childAspectRatio: (5 / 1),
         ),
         itemBuilder: (context,index,) {
-          return GestureDetector(
-            onTap:(){
-              // Navigator.of(context).pushNamed(RouteName.GridViewCustom);
-              //TODO: unmute the selected track in reaper and go to next scene.
+          return ElevatedButton(
+            onPressed: () {
+              // TODO: Unmute track in reaper and go to next section.
+
+              //TODO: Go to Screen with audio mixing buttons and skip button.
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ScenePlayingScreen(
+                  ),
+                ),
+              );
             },
-            child: ElevatedButton(
-              onPressed: () {  },
-              child: Text(languages[index], style: const TextStyle(fontSize: 18)),
-            )
+            child: Text(languages[index], style: const TextStyle(fontSize: 18)),
           );
         },
       )

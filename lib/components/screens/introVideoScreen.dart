@@ -26,6 +26,8 @@ class _IntroVideoScreenState extends State<IntroVideoScreen> {
                 width: 400,
                 child: ElevatedButton(
                     onPressed: () {
+                      //TODO: Put reaper command to skip video
+                      // socketProvider.write('Skip Video');
                       Navigator.push(
                         context,
                         MaterialPageRoute(

@@ -1,5 +1,6 @@
-import 'package:jfp_audio_tour/components/blinkingbutton.dart';
 import 'package:jfp_audio_tour/socketProvider.dart';
+import 'package:network_info_plus/network_info_plus.dart';
+import 'package:network_tools/network_tools.dart';
 import 'package:provider/provider.dart';
 import 'package:wakelock/wakelock.dart';
 import 'package:flutter/material.dart';
@@ -53,13 +54,15 @@ class _FirstRouteState extends State<FirstRoute> {
 
   @override void initState() {
     socketProvider = Provider.of<SocketProvider>(context, listen: false);
-    socketProvider.connectAndListen();
+    // socketProvider.connectAndListen();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     isSocketConnected = Provider.of<SocketProvider>(context, listen: true).isSocketConnected;
+    // TODO:FindHosts
+    // findHosts();
 
     return Scaffold(
       appBar: AppBar(
@@ -72,8 +75,8 @@ class _FirstRouteState extends State<FirstRoute> {
             ElevatedButton(
               child: const Text('Start'),
               onPressed: () {
-                // startIfConnected(context);
-                start(context);
+                startIfConnected(context); // This goes to startScreen if the connection is established to python.
+                // start(context);
               },
             ),
             ElevatedButton(
