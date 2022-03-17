@@ -8,10 +8,7 @@ import '../blinkingbutton.dart';
 class StartScreen extends StatefulWidget {
   const StartScreen({
     Key? key,
-    required this.title,
   }) : super(key: key);
-
-  final String title;
 
   @override
   _StartScreenState createState() => _StartScreenState();
@@ -36,7 +33,7 @@ class _StartScreenState extends State<StartScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text("Start Screen"),
       ),
       body: Center(
         child: MyBlinkingButton(),

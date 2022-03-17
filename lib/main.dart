@@ -1,3 +1,4 @@
+import 'package:jfp_audio_tour/components/screens/hostDeviceSelectionScreen.dart';
 import 'package:jfp_audio_tour/socketProvider.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:network_tools/network_tools.dart';
@@ -27,14 +28,13 @@ class JFAudioTour extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const title = 'WebSocket Demo';
+    const title = 'JFP Audio Tour';
     return MaterialApp(
       theme: ThemeData(
         primarySwatch: Colors.red,
       ),
       title: title,
-      home: const FirstRoute(
-        title: title,
+      home: const HostDeviceSelectionScreen(
       ),
     );
   }
@@ -48,7 +48,7 @@ class FirstRoute extends StatefulWidget {
 }
 
 class _FirstRouteState extends State<FirstRoute> {
-  String title = 'WebSocket Demo';
+  String title = 'JFP Audio Tour Demo';
   late SocketProvider socketProvider;
   bool isSocketConnected = false;
 
@@ -86,7 +86,8 @@ class _FirstRouteState extends State<FirstRoute> {
                     'Attempting connection.'),
                 );
                 ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                socketProvider.connectAndListen();
+                // TODO: GET IP and put in connect and listen
+                socketProvider.connectAndListen("");
               },
             ),
           ],
@@ -100,9 +101,7 @@ class _FirstRouteState extends State<FirstRoute> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => StartScreen(
-            title: title,
-          ),
+          builder: (context) => StartScreen(),
         ),
       );
     } else {
@@ -112,7 +111,8 @@ class _FirstRouteState extends State<FirstRoute> {
               'and Python script is running.'),
       );
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
-      socketProvider.connectAndListen();
+      // TODO: GET IP and put in connect and listen
+      socketProvider.connectAndListen("");
     }
   }
 
@@ -120,9 +120,7 @@ class _FirstRouteState extends State<FirstRoute> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => StartScreen(
-          title: title,
-        ),
+        builder: (context) => StartScreen(),
       ),
     );
   }

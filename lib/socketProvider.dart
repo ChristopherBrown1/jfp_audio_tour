@@ -1,19 +1,25 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'dart:io';
 
 import 'package:network_tools/network_tools.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 class SocketProvider extends ChangeNotifier {
-  String ip = '192.168.0.80'; // TODO: Change this to your ip
+  // String ip = '192.168.0.80'; // TODO: Change this to your ip
   String port = '4545';
   late Socket socket;
   List data = [];
   bool isSocketConnected = false;
+  int advertiserPort = 3595;
+  Set<ActiveHost> hosts = {};
 
 
-  void connectAndListen() async { // TODO: Pass in IP and port for a device the user selects from a list.
-    await Socket.connect(ip, int.parse(port)).then((sock) async {
+  Future<Socket> connectAndListen(String ip) async { // TODO: Pass in IP and port for a device the user selects from a list.
+    Future<Socket> socketFuture = Socket.connect(ip, int.parse(port));
+    socketFuture.then((sock) async {
       socket = sock;
       print('Connected to: ${sock.remoteAddress.address}:${socket.remotePort}');
       isSocketConnected = true;
@@ -21,6 +27,7 @@ class SocketProvider extends ChangeNotifier {
       _listen();
       notifyListeners();
     });
+    return socketFuture;
   }
 
   void _listen() {
@@ -57,54 +64,49 @@ class SocketProvider extends ChangeNotifier {
 
 
 
-
+  // TODO: Make an option to automatically select first open device found or select a device from the list.
+  // TODO: I can save the last used device as a user preference and try to pull it up when connecting.
+  // TODO: If it device isn't available then show the list.
   Future<void> findHosts() async {
-
-    // TODO: Make an option to automatically select first open device found or select a device from the list.
-    // TODO: I can save the last used device as a user preference and try to pull it up when connecting.
-    // TODO: If it device isn't available then show the list.
-
+    hosts = {};
+    notifyListeners();
     final String? networkIP = await NetworkInfo().getWifiIP();
     final String? subnet = networkIP?.substring(0, networkIP.lastIndexOf('.'));
     // final String? subnet = networkIP?.substring(0, 9); // Must be on Cru Business network 10.12.___.___
     //TODO: if subnet is null - tell the user to connect to wifi and try again.
     final stream = HostScanner.discover(subnet!, firstSubnet: 1, lastSubnet: 254,
         progressCallback: (progress) {
-          print('Progress for host discovery : $progress');
         });
 
     stream.listen((host) async {
-      //Same host can be emitted multiple times
-      //Use Set<ActiveHost> instead of List<ActiveHost>
-      print('Found device: ${host}');
-      bool isOpen = await isPortOpen(host.ip);
-      if(isOpen) {
-        print("Host is open on ip ${host.ip}");
-      }
-
+      isPortOpen(host.ip, host);
     }, onDone: () {
       print('Scan completed');
+      // TODO: refresh finished
     });
   }
 
 
-
-
-  Future<bool> isPortOpen(String ip) async {
-    //1. Range
-    PortScanner.discover(ip, startPort: 1, endPort: 1024,
+  Future<void> isPortOpen(String ip, ActiveHost host) async {
+    Future<OpenPort> isOpenFuture;
+    PortScanner.discover(ip, startPort: 3595, endPort: 3595,
         progressCallback: (progress) {
-          print('Progress for port discovery : $progress');
         }).listen((event) {
       if (event.isOpen) {
-        print('Found open port : $event');
+        print('Found open port : ${event.ip}:${event.port}');
+        isOpenFuture = PortScanner.isOpen(ip,3595);
+        isOpenFuture.then((value) {
+          if(value.isOpen) {
+            print(value.ip);
+            hosts.add(host);
+            notifyListeners();
+          }
+        });
       }
     }, onDone: () {
       print('Scan completed');
     });
-    //2. Single
-    Future<OpenPort> isOpenFuture = PortScanner.isOpen(ip,4545);
-    return await isOpenFuture.then((value) => value.isOpen);
+    return;
   }
 
 
