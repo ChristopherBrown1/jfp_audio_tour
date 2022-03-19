@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:jfp_audio_tour/components/screens/scenePlayingScreen.dart';
+import 'package:jfp_audio_tour/screens/scenePlayingScreen.dart';
 
 class LanguageSelectionScreen extends StatefulWidget {
   const LanguageSelectionScreen({Key? key}) : super(key: key);

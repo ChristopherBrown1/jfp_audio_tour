@@ -1,4 +1,6 @@
-import 'package:jfp_audio_tour/components/screens/hostDeviceSelectionScreen.dart';
+import 'package:jfp_audio_tour/models/userPreferences.dart';
+import 'package:jfp_audio_tour/screens/hostDeviceSelectionScreen.dart';
+import 'package:jfp_audio_tour/screens/settingsScreen.dart';
 import 'package:jfp_audio_tour/socketProvider.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:network_tools/network_tools.dart';
@@ -7,11 +9,14 @@ import 'package:wakelock/wakelock.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 
-import 'components/screens/startScreen.dart';
+import 'screens/startScreen.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Wakelock.enable();
+
+  WidgetsFlutterBinding.ensureInitialized();
+  await UserPreferences.init();
 
   runApp(
       MultiProvider(
@@ -34,14 +39,13 @@ class JFAudioTour extends StatelessWidget {
         primarySwatch: Colors.red,
       ),
       title: title,
-      home: const HostDeviceSelectionScreen(
-      ),
+      home: const SettingsScreen(),
     );
   }
 }
 
 class FirstRoute extends StatefulWidget {
-  const FirstRoute({Key? key, required String title}) : super(key: key);
+  const FirstRoute({Key? key}) : super(key: key);
 
   @override
   State<FirstRoute> createState() => _FirstRouteState();
@@ -61,8 +65,6 @@ class _FirstRouteState extends State<FirstRoute> {
   @override
   Widget build(BuildContext context) {
     isSocketConnected = Provider.of<SocketProvider>(context, listen: true).isSocketConnected;
-    // TODO:FindHosts
-    // findHosts();
 
     return Scaffold(
       appBar: AppBar(
@@ -87,7 +89,7 @@ class _FirstRouteState extends State<FirstRoute> {
                 );
                 ScaffoldMessenger.of(context).showSnackBar(snackBar);
                 // TODO: GET IP and put in connect and listen
-                socketProvider.connectAndListen("");
+                socketProvider.connectAndListen("discoverIP");
               },
             ),
           ],
@@ -112,7 +114,7 @@ class _FirstRouteState extends State<FirstRoute> {
       );
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
       // TODO: GET IP and put in connect and listen
-      socketProvider.connectAndListen("");
+      socketProvider.connectAndListen("discoverIP");
     }
   }
 

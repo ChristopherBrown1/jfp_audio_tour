@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../socketProvider.dart';
-import '../blinkingbutton.dart';
+import '../components/blinkingbutton.dart';
 
 class StartScreen extends StatefulWidget {
   const StartScreen({
@@ -38,11 +38,6 @@ class _StartScreenState extends State<StartScreen> {
       body: Center(
         child: MyBlinkingButton(),
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: _sendMessage,
-      //   tooltip: 'Send message',
-      //   child: const Icon(Icons.send),
-      // ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 
