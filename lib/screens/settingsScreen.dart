@@ -152,7 +152,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       );
     } else {
-      // if manual entry in user pref. Go to device selection screen which also allows for manual entry.
+      // if manual entry in user pref. go to device selection screen which also allows for manual entry.
       Navigator.push(
         context,
         MaterialPageRoute(

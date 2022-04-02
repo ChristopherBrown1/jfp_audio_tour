@@ -1,5 +1,7 @@
 
 
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:jfp_audio_tour/screens/startScreen.dart';
@@ -7,7 +9,6 @@ import 'package:network_tools/network_tools.dart';
 import 'package:provider/provider.dart';
 
 import '../../socketProvider.dart';
-import '../models/userPreferences.dart';
 
 class HostDeviceSelectionScreen extends StatefulWidget {
   const HostDeviceSelectionScreen({Key? key}) : super(key: key);
@@ -85,14 +86,7 @@ class _HostDeviceSelectionScreenState extends State<HostDeviceSelectionScreen> {
                   ),
                 ),
                 onTap: () {
-                  context.read<SocketProvider>().connectAndListen(host.ip).whenComplete(() {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const StartScreen(),
-                      ),
-                    );
-                  });
+                  startSession(context, host.ip);
                 },
               );
             })
@@ -131,30 +125,33 @@ class _HostDeviceSelectionScreenState extends State<HostDeviceSelectionScreen> {
         ),
         ElevatedButton(onPressed: () {
 
-          context.read<SocketProvider>().connectAndListen(ipController.text).then((value) {
-            if(value != "") {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const StartScreen(),
-                ),
-              );
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: const Text('No connection made. Double check the IP you entered.\nAlso, ensure reaper and the python script are both running.'),
-                duration: const Duration(seconds: 1),
-                action: SnackBarAction(
-                  label: 'Connection not established',
-                  onPressed: () { },
-                ),
-              ));
-            }
-
-          });
+          startSession(context, ipController.text);
 
         }, child: const Text("Start")),
       ],
     );
+  }
+
+  void startSession(BuildContext context, String ip) {
+    context.read<SocketProvider>().connectAndListen(ip).then((value) {
+      if(value.runtimeType != SocketException) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const StartScreen(),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text('No connection made. Double check the IP address.\nAlso, ensure reaper and the python script are both running.'),
+          duration: const Duration(seconds: 3),
+          action: SnackBarAction(
+            label: 'Connection not established',
+            onPressed: () { },
+          ),
+        ));
+      }
+    });
   }
 
 }

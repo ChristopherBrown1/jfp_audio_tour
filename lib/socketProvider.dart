@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:jfp_audio_tour/models/userPreferences.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'dart:io';
 
@@ -18,30 +19,28 @@ class SocketProvider extends ChangeNotifier {
   double findHostsProgress = 0;
 
 
-  Future connectAndListen(String ip) async { // TODO: Pass in IP and port for a device the user selects from a list.
+  Future<dynamic> connectAndListen(String ip) async { // TODO: Pass in IP and port for a device the user selects from a list.
     if(ip == "discoverIP") {
       await findHosts();
       if(ip != "") {
         ip = this.ip;
-      } else {
-
       }
     }
     try {
       Future<Socket> socketFuture = Socket.connect(ip, int.parse(port));
-      socketFuture.then((sock) async {
+      await socketFuture.then((sock) async {
         socket = sock;
-        print(
-            'Connected to: ${sock.remoteAddress.address}:${socket.remotePort}');
+        print('Connected to: ${sock.remoteAddress.address}:${socket.remotePort}');
         isSocketConnected = true;
         socket.write("Socket connected!");
+        UserPreferences.setIP(ip);
         _listen();
         notifyListeners();
-        return socketFuture;
       });
+      return socket;
     } on SocketException catch (e) {
       print(e.toString());
-      return "";
+      return e;
     }
   }
 
@@ -89,30 +88,35 @@ class SocketProvider extends ChangeNotifier {
     final String? subnet = networkIP?.substring(0, networkIP.lastIndexOf('.'));
     // final String? subnet = networkIP?.substring(0, 9); // Must be on Cru Business network 10.12.___.___
     //TODO: if subnet is null - tell the user to connect to wifi and try again.
+
     final stream = HostScanner.discover(subnet!, firstSubnet: 1, lastSubnet: 254,
         progressCallback: (progress) {
       findHostsProgress = progress;
       notifyListeners();
         });
 
-    stream.listen((host) async {
-      isPortOpen(host.ip, host);
-    }, onDone: () {
-      print('Scan completed');
-      // TODO: refresh finished\
+    await stream.listen((host) async {
+      // add these hosts all to a list
+      print("H $host");
+
+      await isPortOpen(host.ip, host);
+    }).asFuture().then((value) {
+      print('Scan completed $ip');
       return;
     });
   }
 
 
   Future<void> isPortOpen(String ip, ActiveHost host) async {
-    Future<OpenPort> isOpenFuture;
-    PortScanner.discover(ip, startPort: advertiserPort, endPort: advertiserPort,
+    print("is port open started for $ip");
+    // wait for stream to finish
+
+    await PortScanner.discover(ip, startPort: advertiserPort, endPort: advertiserPort,
         progressCallback: (progress) {
         }).listen((event) {
       if (event.isOpen) {
         print('Found open port : ${event.ip}:${event.port}');
-        isOpenFuture = PortScanner.isOpen(ip, advertiserPort);
+        Future<OpenPort> isOpenFuture = PortScanner.isOpen(ip, advertiserPort);
         isOpenFuture.then((value) {
           if(value.isOpen) {
             print(value.ip);
@@ -122,11 +126,13 @@ class SocketProvider extends ChangeNotifier {
           }
         });
       }
-    }, onDone: () {
-      print('Scan completed');
+    }).asFuture().then((value) {
+      print('Is Port Open Scan Completed');
+      return;
     });
-    return;
   }
+
+  // TODO: alternative approach to automatic - use stream to discover all host ip's and immediately try to connect to them when found.
 
 
 }
