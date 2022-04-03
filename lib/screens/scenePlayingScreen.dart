@@ -35,25 +35,30 @@ class _ScenePlayingScreenState extends State<ScenePlayingScreen> {
                 ElevatedButton(
                   onPressed: () {
                     socketProvider.write('play');
-                  }, child: Text("Test Button 1"),
+                  }, child: Text("Play"),
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    socketProvider.write('pause');
-                  }, child: Text("Test Button 2"),
+                    socketProvider.write('stop');
+                  }, child: Text("Stop"),
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    // TODO: PUT YOUR CODE HERE TO MAKE REAPER PLAY
+                    // TODO: PUT YOUR CODE HERE TO MAKE REAPER EXECUTE FUNCTIONS
+                    // Put a ":" between the name that python expects and the parameter
                     // socketProvider.write('Your message to python goes here');
-                    socketProvider.write('rewind');
-                  }, child: Text("Test Button 3"),
+                    socketProvider.write("rewind:40084"); // rewind
+                  }, child: Text("Rewind"),
                 ),
                 ElevatedButton(
-                  onPressed: () {  }, child: Text("Test Button 4"),
+                  onPressed: () {
+                    socketProvider.write("reaper hello:'Hello from flutter'");
+                  }, child: Text("Hello"),
                 ),
                 ElevatedButton(
-                  onPressed: () {  }, child: Text("Test Button 5"),
+                  onPressed: () {
+                    // TODO: Test a function here
+                  }, child: Text("Put new function here"),
                 ),
               ],
             ),

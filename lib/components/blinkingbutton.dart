@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:jfp_audio_tour/screens/demoScreen.dart';
 import 'package:jfp_audio_tour/screens/introVideoScreen.dart';
 import 'package:jfp_audio_tour/main.dart';
 

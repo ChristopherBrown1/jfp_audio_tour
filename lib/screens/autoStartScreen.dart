@@ -20,10 +20,12 @@ class AutoStartScreen extends StatefulWidget {
 class _AutoStartScreenState extends State<AutoStartScreen> {
   Set<ActiveHost> hosts = {};
   bool isLoading = false;
+  int waitTime = 15; // time to wait before trying again to find hosts
 
   @override
   void initState() {
     super.initState();
+    context.read<SocketProvider>().closeSocket();
     WidgetsBinding.instance?.addPostFrameCallback((timeStamp) {
       // try to connect to last ip
       startSession(context);
@@ -75,7 +77,6 @@ class _AutoStartScreenState extends State<AutoStartScreen> {
     String ip = UserPreferences.getIP();
     if(ip != "") {
       context.read<SocketProvider>().connectAndListen(ip).then((value) {
-        print(value.runtimeType);
         if (value.runtimeType != SocketException) {
           Navigator.push(
             context,
@@ -84,34 +85,17 @@ class _AutoStartScreenState extends State<AutoStartScreen> {
             ),
           );
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: const Text('Can not connect to previous session ip.'),
-            duration: const Duration(seconds: 3),
-            action: SnackBarAction(
-              label: 'Trying to find host service...',
-              onPressed: () {},
-            ),
-          ));
-          // if it cant connect start loop of findHosts()
+          String msg = 'Can not connect to previous session ip.';
+          showSnackBar(context, msg);
           repeatFindHosts();
         }
       });
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: const Text('Previous session ip not discovered.'),
-        duration: const Duration(seconds: 3),
-        action: SnackBarAction(
-          label: 'Trying to find host service...',
-          onPressed: () {},
-        ),
-      ));
-
+      String msg = 'Previous session ip not discovered.';
+      showSnackBar(context, msg);
       repeatFindHosts();
     }
   }
-
-
-
 
   Future<void> repeatFindHosts() async {
     print("REPEAT FIND HOSTS");
@@ -120,10 +104,8 @@ class _AutoStartScreenState extends State<AutoStartScreen> {
         isLoading = true;
       });
     }
-
-    print("start finding hosts...");
+    // start finding host ip addresses on the subnet
     await context.read<SocketProvider>().findHosts().then((value) {
-      print("finished finding hosts");
       if (mounted) {
         setState(() {
           isLoading = false;
@@ -131,23 +113,14 @@ class _AutoStartScreenState extends State<AutoStartScreen> {
       }
       hosts = context.read<SocketProvider>().hosts;
       if(context.read<SocketProvider>().hosts.isEmpty) {
-
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Text('No hosts found.'),
-          duration: const Duration(seconds: 3),
-          action: SnackBarAction(
-            label: 'Trying again...',
-            onPressed: () {},
-          ),
-        ));
-
-        Future.delayed(const Duration(seconds: 15), () {
-          // if host isnt found run the loop again in 15 seconds.
+        String msg = 'No hosts found.';
+        showSnackBar(context, msg);
+        Future.delayed(Duration(seconds: waitTime), () {
+          // if host isnt found run the loop again in set amount of seconds.
           if (mounted) {
             startSession(context);
           }
         });
-
       } else {
         ActiveHost host = hosts.first;
         context.read<SocketProvider>().connectAndListen(host.ip).then((value) {
@@ -159,14 +132,8 @@ class _AutoStartScreenState extends State<AutoStartScreen> {
               ),
             );
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: const Text('Host found but there was a problem connecting.'),
-              duration: const Duration(seconds: 3),
-              action: SnackBarAction(
-                label: 'Connection not established',
-                onPressed: () { },
-              ),
-            ));
+            String msg = 'Host found but there was a problem connecting.';
+            showSnackBar(context, msg);
           }
           if (mounted) {
             startSession(context);
@@ -175,6 +142,17 @@ class _AutoStartScreenState extends State<AutoStartScreen> {
         return;
       }
     });
+  }
+
+  void showSnackBar(BuildContext context, String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg),
+      duration: const Duration(seconds: 3),
+      action: SnackBarAction(
+        label: 'Trying to find host service...',
+        onPressed: () {},
+      ),
+    ));
   }
 
 }

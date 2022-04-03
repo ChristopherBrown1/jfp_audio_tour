@@ -5,8 +5,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:jfp_audio_tour/models/userPreferences.dart';
 import 'package:jfp_audio_tour/screens/hostDeviceSelectionScreen.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../socketProvider.dart';
 import 'autoStartScreen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -26,6 +28,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override void initState() {
     super.initState();
+    context.read<SocketProvider>().closeSocket();
     WidgetsBinding.instance?.addPostFrameCallback((_) {
       startTimer();
     });

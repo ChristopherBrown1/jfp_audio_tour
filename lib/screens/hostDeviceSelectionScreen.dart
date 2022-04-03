@@ -26,6 +26,7 @@ class _HostDeviceSelectionScreenState extends State<HostDeviceSelectionScreen> {
   @override
   void initState() {
     super.initState();
+    context.read<SocketProvider>().closeSocket();
     WidgetsBinding.instance?.addPostFrameCallback((timeStamp) {
       context.read<SocketProvider>().findHosts();
     });
@@ -101,7 +102,6 @@ class _HostDeviceSelectionScreenState extends State<HostDeviceSelectionScreen> {
   }
 
   Widget loadingIndicator(context) {
-    print("HEREEE");
     return SizedBox(
       width: 100,
       height: 100,

@@ -54,9 +54,12 @@ class SocketProvider extends ChangeNotifier {
     }, onDone: () {
       isSocketConnected = false;
       debugPrint('ws channel closed');
+      // TODO: try to reconnect or go back to user selected connection screen (auto or manual)
+
       notifyListeners();
     }, onError: (error, stacktrace) {
       debugPrint('ws error $error');
+      // TODO: try to reconnect or go back to user selected connection screen (auto or manual)
     });
   }
 
@@ -68,19 +71,19 @@ class SocketProvider extends ChangeNotifier {
   }
 
   void closeSocket() {
-    socket.write('exit');
-    socket.flush();
-    socket.close();
-    isSocketConnected = false;
-    notifyListeners();
+    try {
+      if (socket != null) {
+        socket.write('exit');
+        socket.flush();
+        socket.close();
+        isSocketConnected = false;
+        notifyListeners();
+      }
+    } catch(e) {
+      debugPrint(e.toString());
+    }
   }
 
-
-
-
-  // TODO: Make an option to automatically select first open device found or select a device from the list.
-  // TODO: I can save the last used device as a user preference and try to pull it up when connecting.
-  // TODO: If it device isn't available then show the list.
   Future<void> findHosts() async {
     hosts = {};
     notifyListeners();
@@ -96,12 +99,9 @@ class SocketProvider extends ChangeNotifier {
         });
 
     await stream.listen((host) async {
-      // add these hosts all to a list
-      print("H $host");
-
       await isPortOpen(host.ip, host);
     }).asFuture().then((value) {
-      print('Scan completed $ip');
+      print('Scan completed for all hosts on subnet.');
       return;
     });
   }
@@ -109,8 +109,6 @@ class SocketProvider extends ChangeNotifier {
 
   Future<void> isPortOpen(String ip, ActiveHost host) async {
     print("is port open started for $ip");
-    // wait for stream to finish
-
     await PortScanner.discover(ip, startPort: advertiserPort, endPort: advertiserPort,
         progressCallback: (progress) {
         }).listen((event) {
@@ -127,12 +125,11 @@ class SocketProvider extends ChangeNotifier {
         });
       }
     }).asFuture().then((value) {
-      print('Is Port Open Scan Completed');
+      print('Port Scan Completed for $ip');
       return;
     });
   }
 
   // TODO: alternative approach to automatic - use stream to discover all host ip's and immediately try to connect to them when found.
-
 
 }
